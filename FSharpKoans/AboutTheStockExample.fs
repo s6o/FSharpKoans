@@ -53,13 +53,40 @@ module ``about the stock example`` =
           "2012-03-02,32.31,32.44,32.00,32.08,47314200,32.08";
           "2012-03-01,31.93,32.39,31.85,32.29,77344100,32.29";
           "2012-02-29,31.89,32.00,31.61,31.74,59323600,31.74"; ]
-    
+
+    let asPrice (x : string) =
+        try
+            System.Double.Parse(x, System.Globalization.CultureInfo.InvariantCulture)
+            |> Some
+        with
+            | _ -> None
+
+    let findDate =
+        stockData.Tail
+        |> List.map (fun (x:string) ->
+            let dataBuckets =
+                x.Split([|','|])
+            
+            let openPrice =
+                dataBuckets.[1] |> asPrice
+
+            let closePrice =
+                dataBuckets.[4] |> asPrice
+
+            let priceDiff (p1 : float) (p2 : float) =
+                p1 - p2 |> abs
+
+            (dataBuckets.[0],  Option.map2 priceDiff openPrice closePrice |> Option.defaultValue 0.0)
+            )
+        |> List.maxBy snd
+        |> fst
+
     // Feel free to add extra [<Koan>] members here to write
     // tests for yourself along the way. You can also try 
     // using the F# Interactive window to check your progress.
 
     [<Koan>]
     let YouGotTheAnswerCorrect() =
-        let result =  __
+        let result =  findDate
         
         AssertEquality "2012-03-13" result
